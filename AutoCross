@@ -1,0 +1,343 @@
+import subprocess
+
+from PyDictionary import PyDictionary
+from english_words import get_english_words_set
+import random
+import numpy as np
+import os
+import sys
+import csv
+
+def wordIndex(wordMatch, indexList, next):
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+
+    if next == True:
+        try:
+            index = alphabet.index(wordMatch[0]) + 1
+            return indexList[index]
+        except:
+            return indexList[len(letterIndex) - 1]
+    else:
+        index = alphabet.index(wordMatch[0])
+        return indexList[index]
+
+
+if '--rows' in sys.argv and '--cols' in sys.argv:
+    try:
+        rows_index = sys.argv.index('--rows') + 1
+        cols_index = sys.argv.index('--cols') + 1
+        rows = int(sys.argv[rows_index])
+        cols = int(sys.argv[cols_index])
+    except (ValueError, IndexError):
+        print("Invalid command-line arguments for rows and cols. Taking inputs values.")
+
+else:
+    rows = int(input("Enter Number of Rows: "))
+    cols = int(input("Enter Number of Columns: "))
+
+matrix = np.empty((rows, cols), dtype=str)
+
+web2lowerset = get_english_words_set(['web2'], lower=True)
+web2lowerset = list(web2lowerset)
+dictionary = PyDictionary()
+web2lowerset.sort()
+letterIndex = []
+letterIndex.insert(0, 0)
+
+
+for x in range(len(web2lowerset)):
+    try:
+        if web2lowerset[x][0] != web2lowerset[x+1][0]:
+            letterIndex.append(x+1)
+    except:
+        pass
+
+letterIndex.append(len(web2lowerset))
+
+flag = True
+while flag:
+    randWord = random.randint(0, 234450)
+    if len(web2lowerset[randWord]) == cols:
+        if dictionary.meaning(web2lowerset[randWord], True) is not None:
+            print(web2lowerset[randWord])
+            flag = False
+
+for x in range(cols):
+    try:
+        matrix[0][x] = web2lowerset[randWord][x]
+
+    except:
+        pass
+
+
+rowNum = 1
+colNum = 0
+#iterate for the rest of the words
+
+for wI in range(rows + cols +1):
+    wordMatch = ''
+    #rows
+    if wI % 2 == 0:
+        for row in range(rows):
+            wordMatch += matrix[row][colNum]
+        flag = True
+        print(wordMatch)
+        #if its the first column then it chooses a random word
+        #else it goes through the list
+        if colNum == 0:
+            while flag:
+                randWord = random.randint(wordIndex(wordMatch, letterIndex, False), wordIndex(wordMatch, letterIndex, True)) - 1
+                if web2lowerset[randWord].startswith(wordMatch):
+                    if rows == len(web2lowerset[randWord]):
+                        if dictionary.meaning(web2lowerset[randWord], True) is not None:
+                            # check to see if the word that is about to be placed
+                            # can form other words with the letters to the left of it
+
+                            # adding the row letters up to make a prefix
+                            # goes one row at a time
+                            print(web2lowerset[randWord])
+                            if colNum != 0:
+                                found = 0
+                                for row in range(rows - rowNum):
+                                    rowMatch = ''
+                                    for col in range(colNum):
+                                        rowMatch += matrix[rowNum + row][col]
+                                    try:
+                                        rowMatch += web2lowerset[randWord][rowNum + row]
+                                    except:
+                                        pass
+
+                                    print(str(found) + " : " + rowMatch)
+
+                                    # find a word that meets all requirements for that specific column
+                                    flag1 = True
+                                    rowRand = wordIndex(rowMatch, letterIndex, False) - 1
+                                    nextInd = wordIndex(rowMatch, letterIndex, False)
+
+                                    flag2 = True
+                                    while rowRand <= nextInd and flag2:
+                                        # colRand = random.randint(0, 234450)
+                                        if web2lowerset[rowRand].startswith(rowMatch):
+                                            if len(web2lowerset[rowRand]) == rows:
+                                                if dictionary.meaning(web2lowerset[rowRand], True) is not None:
+                                                    flag2 = False
+                                                    break
+                                        rowRand += 1
+
+                                    if flag2 == False:
+                                        found += 1
+
+                                if found == (rows - rowNum):
+                                    print(web2lowerset[randWord])
+                                    flag = False
+                            else:
+                                flag = False
+        #if it is not the first column
+        else:
+            randWord = wordIndex(wordMatch, letterIndex, False) - 1
+            while flag and randWord <= wordIndex(wordMatch, letterIndex, True):
+                randWord += 1
+                if web2lowerset[randWord].startswith(wordMatch):
+                    if rows == len(web2lowerset[randWord]):
+                        if dictionary.meaning(web2lowerset[randWord], True) is not None:
+                            # check to see if the word that is about to be placed
+                            # can form other words with the letters to the left of it
+
+                            # adding the row letters up to make a prefix
+                            # goes one row at a time
+
+                            if colNum != 0:
+                                found = 0
+                                for row in range(rows - rowNum):
+                                    rowMatch = ''
+                                    for col in range(colNum):
+                                        rowMatch += matrix[rowNum + row][col]
+                                    try:
+                                        rowMatch += web2lowerset[randWord][rowNum + row]
+                                    except:
+                                        pass
+
+                                    # find a word that meets all requirements for that specific column
+                                    flag1 = True
+                                    rowRand = wordIndex(rowMatch, letterIndex, False) - 1
+                                    flag2 = True
+                                    while rowRand <= wordIndex(rowMatch, letterIndex, True) and flag2:
+                                        # colRand = random.randint(0, 234450)
+                                        if web2lowerset[rowRand].startswith(rowMatch):
+                                            if len(web2lowerset[rowRand]) == rows:
+                                                if dictionary.meaning(web2lowerset[rowRand], True) is not None:
+                                                    flag2 = False
+                                                    break
+                                        rowRand += 1
+
+                                    if flag2 == False:
+                                        found += 1
+
+                                if found == (rows - rowNum):
+                                    print(web2lowerset[randWord])
+                                    flag = False
+                            else:
+                                flag = False
+
+
+        if flag is False:
+            for y in range(rows):
+                try:
+                    matrix[y][colNum] = web2lowerset[randWord][y]
+
+                except:
+                    pass
+            colNum += 1
+
+        else:
+            valid = True
+
+            for row in range(len(matrix)):
+                string = ''
+                for col in range(len(matrix[0])):
+                    string += matrix[row][col]
+                if dictionary.meaning(string, True):
+                    pass
+                else:
+                    valid = False
+
+            for col in range(len(matrix[0])):
+                string = ''
+                for row in range(len(matrix)):
+                    string += matrix[row][col]
+                if dictionary.meaning(string, True):
+                    pass
+                else:
+                    valid = False
+
+            if valid is True:
+                with open('matrix_of_strings.csv', 'a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerows(matrix)
+                    file.write('\n')
+            else:
+                print("No combination found: restarting with " + str(rows) + " rows and " + str(cols) + " columns")
+                python = sys.executable
+                script = os.path.abspath(__file__)
+                args = [python, script] + sys.argv[1:] + ['--rows', str(rows), '--cols', str(cols)]
+                subprocess.run(args)
+                sys.exit()
+
+
+    #column
+    if wI % 2 == 1:
+        for col in range(cols):
+            wordMatch += matrix[rowNum][col]
+        flag = True
+        randWord = wordIndex(wordMatch, letterIndex, False) - 1
+        while flag and randWord < wordIndex(wordMatch, letterIndex, True):
+            randWord += 1
+            found = 0
+            if web2lowerset[randWord].startswith(wordMatch):
+                if len(web2lowerset[randWord]) == cols:
+                    if dictionary.meaning(web2lowerset[randWord], True) is not None:
+
+                        #check to see if the word that is about to be placed
+                        #can form other words with the letters above it
+
+                        #adding the columns letters up to make a prefix
+                        #goes one column at a time
+                        print(web2lowerset[randWord])
+                        for col in range(cols - colNum):
+                            colMatch = ''
+                            for row in range(rowNum):
+                                colMatch += matrix[row][colNum + col]
+                            colMatch += web2lowerset[randWord][colNum + col]
+
+
+                            print(str(found) + " : " + colMatch)
+
+                            #find a word that meets all requirements for that specific column
+                            flag1 = True
+                            colRand = wordIndex(colMatch, letterIndex, False)
+                            while colRand <= wordIndex(colMatch, letterIndex, True) and flag1:
+                                if web2lowerset[colRand].startswith(colMatch):
+                                    if len(web2lowerset[colRand]) == rows:
+                                        if dictionary.meaning(web2lowerset[colRand], True) is not None:
+                                            flag1 = False
+                                            break
+                                colRand += 1
+
+                            if flag1 == False:
+                                found += 1
+
+
+
+                        if found == (cols - colNum):
+                            print(web2lowerset[randWord])
+
+                            flag = False
+
+        if flag is False:
+            for x in range(cols):
+                try:
+                    matrix[rowNum][x] = web2lowerset[randWord][x]
+
+                except:
+                    pass
+            rowNum += 1
+
+            if matrix[rows - 1][cols - 1] != '':
+                with open('matrix_of_strings.csv', 'a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerows(matrix)
+                    file.write('\n')
+
+                python = sys.executable
+                script = os.path.abspath(__file__)
+                args = [python, script] + sys.argv[1:] + ['--rows', str(rows), '--cols', str(cols)]
+                subprocess.run(args)
+                sys.exit()
+
+
+        else:
+                #checking to see if crossword is valid before restaring
+            valid = True
+
+            for row in range(len(matrix)):
+                string = ''
+                for col in range(len(matrix[0])):
+                    string += matrix[row][col]
+                if dictionary.meaning(string, True):
+                    pass
+                else:
+                    valid = False
+
+            for col in range(len(matrix[0])):
+                string = ''
+                for row in range(len(matrix)):
+                    string += matrix[row][col]
+                if dictionary.meaning(string, True):
+                    pass
+                else:
+                    valid = False
+
+            if valid is True:
+                print("Combination Found! Saving to File!")
+                with open('matrix_of_strings.csv', 'a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerows(matrix)
+                    file.write('\n')
+                python = sys.executable
+                script = os.path.abspath(__file__)
+                args = [python, script] + sys.argv[1:] + ['--rows', str(rows), '--cols', str(cols)]
+                subprocess.run(args)
+                sys.exit()
+
+            else:
+                print("No combination found: restarting with " + str(rows) + " rows and " + str(cols) + " columns")
+                python = sys.executable
+                script = os.path.abspath(__file__)
+                args = [python, script] + sys.argv[1:] + ['--rows', str(rows), '--cols', str(cols)]
+                subprocess.run(args)
+                sys.exit()
+
+
+
+
+    print(matrix)
