@@ -1,0 +1,64 @@
+import subprocess
+from PyDictionary import PyDictionary
+from english_words import get_english_words_set
+import random
+import numpy as np
+import os
+import sys
+import csv
+
+
+def getLetterIndicies(wordList):
+    letterIndex = []
+    letterIndex.insert(0, 0)
+    for x in range(len(wordList)):
+        try:
+            if wordList[x][0] != wordList[x + 1][0]:
+                letterIndex.append(x + 1)
+        except:
+            pass
+
+    letterIndex.append(len(wordList))
+    return letterIndex
+
+
+def addBlanks(matrix):
+    while True:
+        try:
+            row = input("Enter the row (press Enter to exit): ")
+
+            if row == "":
+                break
+
+            col = int(input("Enter the column: "))
+
+            print(f"Entered coordinates: Row {row}, Column {col}")
+            row = int(row)
+            matrix[row-1][col-1] = '■'
+
+        except ValueError:
+            print("Invalid input. Please enter a valid integer for row and column.")
+
+    return matrix
+
+
+def main():
+    #makes the matrix
+    rows = int(input("Enter Number of Rows: "))
+    cols = int(input("Enter Number of Columns: "))
+    matrix = np.empty((rows, cols), dtype=str)
+    
+    #gets all of the english words
+    web2lowerset = get_english_words_set(['web2'], lower=True)
+    web2lowerset = list(web2lowerset)
+    dictionary = PyDictionary()
+    web2lowerset.sort()
+    
+    #grabs the starting index of each letter
+    letterIndex = getLetterIndicies(web2lowerset)
+    print(letterIndex)
+    
+    #adds the blanks
+    matrix = addBlanks(matrix)
+    print(matrix)
+
