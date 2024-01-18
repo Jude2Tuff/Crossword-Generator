@@ -42,23 +42,57 @@ def addBlanks(matrix):
     return matrix
 
 
+def wordLength(matrix, ordNum, row):
+    #find the length of the row until '■'
+    #returns a list of the length of the spaces between the edges and blanks
+    lengthList = []
+
+    if row:
+        wordCount = 0
+        for x in range(len(matrix[ordNum])):
+            if matrix[ordNum][x] != '■':
+                wordCount += 1
+            else:
+                if wordCount != 0:
+                    lengthList.append(wordCount)
+                wordCount = 0
+    #finds the length of the column until '■'
+    if not row:
+        wordCount = 0
+        for x in range(len(matrix)):
+            if matrix[x][ordNum] != '■':
+                wordCount += 1
+            else:
+                if wordCount != 0:
+                    lengthList.append(wordCount)
+                wordCount = 0
+    return lengthList
+
+
+
 def main():
     #makes the matrix
     rows = int(input("Enter Number of Rows: "))
     cols = int(input("Enter Number of Columns: "))
     matrix = np.empty((rows, cols), dtype=str)
-    
+
     #gets all of the english words
     web2lowerset = get_english_words_set(['web2'], lower=True)
     web2lowerset = list(web2lowerset)
     dictionary = PyDictionary()
     web2lowerset.sort()
-    
+
     #grabs the starting index of each letter
     letterIndex = getLetterIndicies(web2lowerset)
     print(letterIndex)
-    
+
     #adds the blanks
     matrix = addBlanks(matrix)
     print(matrix)
 
+    
+
+
+
+
+main()
