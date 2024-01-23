@@ -6,7 +6,8 @@ import numpy as np
 import os
 import sys
 import csv
-
+import pickle
+import copy
 
 def getLetterIndicies(wordList):
     letterIndex = []
@@ -20,6 +21,22 @@ def getLetterIndicies(wordList):
 
     letterIndex.append(len(wordList))
     return letterIndex
+
+def wordIndex(wordMatch, indexList, next):
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+
+    if wordMatch == "":
+        return random.randint(0, 25)
+
+    else:
+
+
+        if next:
+            nextIndex = alphabet.index(wordMatch[0])
+            return indexList[nextIndex + 1]
+        else:
+            index = alphabet.index(wordMatch[0])
+            return index
 
 
 def addBlanks(matrix):
@@ -42,15 +59,16 @@ def addBlanks(matrix):
     return matrix
 
 
-def wordLength(matrix, ordNum, row):
+def wordLength(matrix, rowNum, colNum, row):
     #find the length of the row until '■'
     #returns a list of the length of the spaces between the edges and blanks
     lengthList = []
 
     if row:
         wordCount = 0
-        for x in range(len(matrix[ordNum])):
-            if matrix[ordNum][x] != '■':
+        for x in range(len(matrix[rowNum]) + 1):
+            if x != len(matrix[rowNum]) and matrix[rowNum][x] != '■':
+            #if x != len(matrix[rowNum]) and matrix[rowNum][x] == '' :
                 wordCount += 1
             else:
                 if wordCount != 0:
@@ -59,14 +77,304 @@ def wordLength(matrix, ordNum, row):
     #finds the length of the column until '■'
     if not row:
         wordCount = 0
-        for x in range(len(matrix)):
-            if matrix[x][ordNum] != '■':
+        for x in range(len(matrix) + 1):
+            if x != len(matrix) and matrix[x][colNum] != '■':
                 wordCount += 1
             else:
                 if wordCount != 0:
                     lengthList.append(wordCount)
                 wordCount = 0
     return lengthList
+
+def findWord(length, startChar, wordList, indexList, rowNum, colNum):
+    if startChar == '':
+        index = wordIndex(startChar, indexList, False)
+        if index != 25:
+            nextIndex = indexList[index + 1]
+
+    else:
+        index = wordIndex(startChar, indexList, False)
+        nextIndex = wordIndex(startChar, indexList, True)
+
+
+    if index == 25:
+        nextIndex = len(wordList) - 1
+
+    if colNum == 0 or rowNum == 0:
+
+
+
+        flag = True
+        while flag:
+            word = random.randint(index, nextIndex)
+            if wordList[word].startswith(startChar):
+                if len(wordList[word]) == length:
+                    return wordList[word]
+
+    #if it is the first word
+    else:
+        while index < nextIndex:
+            if len(wordList[index]) == length:
+                if wordList[index].startswith(startChar):
+                    return wordList[index]
+            index += 1
+    return ""
+def checkFuture(matrix, rowNum, colNum, row, word, wordList, indexList, length):
+    if row:
+        for col in range(len(matrix[0])):
+            string = ''
+
+            for x in range(len(matrix)):
+
+                if matrix[x][col] != "":
+                    string += matrix[x][col]
+                else:
+                    string += "_"
+                    break
+
+            stringLen = ''
+            for char in range(len(matrix)):
+
+                if matrix[char][col] != "":
+                    stringLen += matrix[char][col]
+                else:
+                    stringLen += "_"
+
+            stop = ''
+            length = stringLen.split("■")
+            for q in length:
+                if "_" in q:
+                    stop = q
+                    break
+            length = len(stop)
+
+            if "_" in string:
+                string = string.split('■')
+                string = string[len(string) - 1]
+
+                # string = string[:-1]
+                oString = ''
+                for y in range(col, -1, -1):
+                    try:
+                        if matrix[x][y] != '■':
+                            if matrix[x][y] != '':
+                                oString += matrix[x][y]
+                            else:
+                                oString += '_'
+                        else:
+                            break
+                    except:
+                        pass
+
+                oString = oString[::-1]
+                # oString = oString[:-1]
+                string = string.rstrip("_")
+                try:
+                    string += word[len(oString) - 1]
+                except:
+                    pass
+                print("String to check: " + string)
+
+                index = indexList[wordIndex(string, indexList, False)]
+                if index != 25:
+                    nextIndex = wordIndex(string, indexList, True)
+                else:
+                    nextIndex = len(wordList) -1
+
+                for i in range(index, nextIndex):
+                    if len(wordList[i]) == length:
+                        if wordList[i].startswith(string):
+                            print("Word that starts with " + string + " found")
+                            return True
+                return False
+
+
+    else:
+        for row in range(len(matrix)):
+            string = ''
+
+            for x in range(len(matrix[0])):
+
+                if matrix[row][x] != "":
+                    string += matrix[row][x]
+                else:
+                    string += "_"
+                    break
+
+            stringLen = ''
+            for char in range(len(matrix[0])):
+
+                if matrix[row][char] != "":
+                    stringLen += matrix[row][char]
+                else:
+                    stringLen += "_"
+
+            stop = ''
+            length = stringLen.split("■")
+            for q in length:
+                if "_" in q:
+                    stop = q
+                    break
+            length = len(stop)
+
+            if "_" in string:
+                string = string.split('■')
+                string = string[len(string) - 1]
+
+                # string = string[:-1]
+                oString = ''
+                for y in range(row, -1, -1):
+                    try:
+                        if matrix[y][x] != '■':
+                            if matrix[y][x] != '':
+                                oString += matrix[y][x]
+                            else:
+                                oString += '_'
+                        else:
+                            break
+                    except:
+                        pass
+
+                oString = oString[::-1]
+                # oString = oString[:-1]
+                string = string.rstrip("_")
+                try:
+                    string += word[len(oString) - 1]
+                except:
+                    pass
+                print("String to check: " + string)
+
+                index = indexList[wordIndex(string, indexList, False)]
+                if index != 25:
+                    nextIndex = wordIndex(string, indexList, True)
+                else:
+                    nextIndex = len(wordList) - 1
+
+                for i in range(index, nextIndex):
+                    if len(wordList[i]) == length:
+                        if wordList[i].startswith(string):
+                            print("Word that starts with " + string + " found")
+                            return True
+                return False
+
+
+
+
+
+def getStartChar(row, rowNum, colNum, matrix):
+    if row:
+        string = ''
+        for x in range(len(matrix[rowNum])):
+            if x == 0 and matrix[rowNum][x] == '■':
+                pass
+            else:
+                string += matrix[rowNum][x]
+
+        words = string.split("■")
+        starting_characters = []
+
+        for i, word in enumerate(words):
+            # Append the entire word if not empty
+            starting_characters.append(word)
+
+        return starting_characters
+
+    else:
+        string = ''
+        for x in range(len(matrix)):
+            if x == 0 and matrix[x][colNum] == '■':
+                pass
+            else:
+                string += matrix[x][colNum]
+
+        words = string.split("■")
+        starting_characters = []
+
+        for i, word in enumerate(words):
+            # Append the entire word if not empty
+            starting_characters.append(word)
+
+        return starting_characters
+
+def placeWord(wordLength, wordList, matrix, row, rowNum, colNum, indexList):
+    if row:
+        index = 0
+        #gets list of starting characters
+        startChars = getStartChar(row, rowNum, colNum, matrix)
+        print(startChars)
+
+        #gets where it should start placing words, for example
+        #if my row is "re■a__■__" then is starts placing words after the second square
+        #it loops until it comes to a blank letter position and counts
+        # the squares because the squares indicate if it is a new word
+        # for x in range(len(matrix[rowNum])):
+        #     try:
+        #         if matrix[rowNum][x] == '■':
+        #             index += 1
+        #         if matrix[rowNum][x] == '':
+        #             break
+        #     except:
+        #         pass
+        #"■■■re■a__■__"
+        start = 0
+        if matrix[rowNum][0] == '■':
+            for x in range(len(matrix[rowNum])):
+                if matrix[rowNum][x] == '■':
+                    start += 1
+                else:
+                    break
+        print(start)
+
+        for i in range(len(wordLength)):
+            char = 0
+            flag = True
+            while flag:
+                word = findWord(wordLength[i], startChars[i], wordList, indexList, rowNum, colNum)
+                if word == '':
+                    return False
+                print("The word is " + word)
+                if checkFuture(matrix, rowNum, colNum, row, word, wordList, indexList, wordLength[i]) is True:
+                    flag = False
+                    print(word + " is a success!")
+                else:
+                    return False
+            for x in range(start, len(matrix[rowNum])):
+                if char != len(word):
+                    matrix[rowNum][x] = word[char]
+                    char += 1
+                    index += 1
+                else:
+                    if matrix[rowNum][x] == '■':
+                        pass
+                    else:
+                        start = x
+                        break
+
+    else:
+        startChars = getStartChar(row, rowNum, colNum, matrix)
+
+        for i in range(0, len(wordLength)):
+            char = 0
+
+            flag = True
+            while flag:
+                word = findWord(wordLength[i], startChars[i], wordList, indexList, rowNum, colNum)
+                if word == '':
+                    return False
+                print(word)
+                if checkFuture(matrix, rowNum, colNum, row, word, wordList, indexList, wordLength[i]) is True:
+                    flag = False
+                else:
+                    return False
+
+
+            for x in range(len(matrix)):
+                if matrix[x][colNum] != '■':
+                    try:
+                        matrix[x][colNum] = word[char]
+                        char += 1
+                    except:
+                        pass
 
 
 
@@ -89,8 +397,57 @@ def main():
     #adds the blanks
     matrix = addBlanks(matrix)
     print(matrix)
+    originalMatrix = copy.deepcopy(matrix)
+    flag = True
+    stoptheLoop = False
+    while not stoptheLoop:
+        while flag:
 
-    
+
+            #time to start making it loop and fill up the square
+            rowNum = 0
+            colNum = 0
+            for x in range(rows + cols):
+                if flag == False:
+                    break
+
+                rowString = ''
+                colString = ''
+                for q in range(len(matrix)):
+                    colString += matrix[q][len(matrix[0]) - 1]
+                for y in range(len(matrix)):
+                    rowString += matrix[len(matrix) - 1][y]
+                if len(rowString) == len(matrix[0]) and len(colString) == len(matrix):
+                    flag = False
+                    stoptheLoop = True
+                    break
+
+                #rows
+                if x % 2 == 0 and rowNum < len(matrix):
+                    lengthList = wordLength(matrix, rowNum, colNum, True)
+                    print(lengthList)
+                    if placeWord(lengthList, web2lowerset, matrix, True, rowNum, colNum, letterIndex) is False:
+                        flag = False
+                        break
+
+
+
+                    print(matrix)
+                    rowNum += 1
+
+                if x % 2 == 1 and colNum < len(matrix[colNum]):
+                    lengthList = wordLength(matrix, rowNum, colNum, False)
+                    print(lengthList)
+                    if placeWord(lengthList, web2lowerset, matrix, False, rowNum, colNum, letterIndex) is False:
+                        flag = False
+                        break
+                    print(matrix)
+                    colNum += 1
+        matrix = copy.deepcopy(originalMatrix)
+        flag = True
+
+
+    print(matrix)
 
 
 
